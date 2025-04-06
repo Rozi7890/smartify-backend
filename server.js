@@ -12,6 +12,12 @@ const PORT = 3000;  // Можеш да промениш порта, ако ис�
 app.use(cors()); // Позволяваме CORS (ако фронтендът е на различен домейн)
 app.use(bodyParser.json()); // За да обработваш JSON данни
 
+// Проверка дали сме в правилната среда за зареждане на .env файловете
+if (!process.env.OPENAI_API_KEY || !process.env.VOICERSS_API_KEY) {
+  console.error("Липсват важни API ключове в .env файла.");
+  process.exit(1); // Спираме сървъра, ако липсват API ключове
+}
+
 // Инициализация на OpenAI API клиента с ключ от .env
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Зареждаме ключа от .env
@@ -43,12 +49,12 @@ app.post('/summarize', async (req, res) => {
 // Рут за преобразуване в аудио
 app.post('/convert-to-audio', async (req, res) => {
   const { text } = req.body;
-  
-  const VOICERSS_API_KEY = process.env.VOICERSS_API_KEY; // Зареждаме API ключа от .env
 
   if (!text || text.trim() === "") {
     return res.status(400).send('Няма текст за преобразуване в аудио!');
   }
+
+  const VOICERSS_API_KEY = process.env.VOICERSS_API_KEY; // Зареждаме API ключа от .env
 
   try {
     const audioUrl = `https://api.voicerss.org/?key=${VOICERSS_API_KEY}&hl=bg-bg&src=${encodeURIComponent(text)}&r=0`;
@@ -63,4 +69,8 @@ app.post('/convert-to-audio', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Сървърът работи на http://localhost:${PORT}`);
 });
+
+// Проверка дали API ключовете са заредени правилно
 console.log("OpenAI API Key:", process.env.OPENAI_API_KEY ? "OK" : "Missing");
+console.log("VoiceRSS API Key:", process.env.VOICERSS_API_KEY ? "OK" : "Missing");
+
